@@ -206,38 +206,45 @@ omarunner does not raise the shell's launch OSD.
 
 ## What you can type
 
-Results are grouped. Calculator and Open rows sit at the top; then Omarchy,
-Applications and Session, whichever holds the best match first; then Windows,
-Folders, Files and Recent. A search that matches nothing offers a web search.
+Without a prefix, omarunner searches apps, the Omarchy menu tree, session
+actions, folders, files, recent files, open windows and locations. Calculator
+and Open results lead; then Omarchy, Applications and Session, whichever holds
+the best match first; then Windows, Folders, Files and Recent. A query that
+matches nothing offers a web search.
 
-| Type | Example | Enter | Shift+Enter |
+A keyword followed by a space hands the whole result list to one source. Keywords
+are case-insensitive. Most keyword sources also accept a colon: `dd:query`,
+`imdb:query`, `ld:query`, `svc:query`, `bm:query` and `bh:query` work like the
+space forms.
+
+| Type | Examples | Enter | Shift+Enter |
 |---|---|---|---|
 | Apps, Omarchy menu | `firefox`, `theme` | launch / open | — |
-| Session | `lock`, `sleep`, `restart`, `power off` | run it | — |
-| Calculator | `2+2*3`, `=2` | copy the result | copy the result |
+| Session | `lock`, `sleep`, `restart`, `shutdown`, `power off` | run it | — |
+| Calculator | `2+2*3`, `=2`, `(1+2)*3` | copy the result | copy the result |
 | Unit conversion (qalc) | `10 km to mi`, `100f to c`, `5 usd in eur`, `20% of 300` | copy the result | copy the result |
-| Time & date | `t`, `time`, `date`, `now`, `ts`, `week`, `t utc`, `t utc+2`, `t +2h`, `t -30m` | copy the result | copy the result |
-| Values | `uuid`, `uuid4`, `uuid7`, `b64 text`, `b64d …`, `sha256 text`, `md5 text`, `hex 16`, `pw 24`, `rand 1 100`, `lorem 3` | copy the result | copy the result |
+| Time & date | `t`, `time`, `date`, `now`, `ts`, `unix`, `week`, `t utc`, `t utc+2`, `t +2h`, `t -30m` | copy the result | copy the result |
+| Values | `uuid`, `uuid4`, `uuid7`, `guid`, `b64 text`, `base64 text`, `b64d …`, `sha256 text`, `md5 text`, `hex 16`, `pw 24`, `rand 1 100`, `lorem 3` | copy the result | copy the result |
 | Open | `github.com/x`, `https://…`, `localhost:8080`, `~/Downloads`, `/etc` | open it | copy the URL / reveal the folder |
 | Folders | `documents`, `docmuents`, `etc`, `hypr` | open the folder | terminal in the folder |
 | Files | `bindlua`, `invoice pdf` | open the file | reveal its folder |
-| Recent | `recent` (the newest files), `recent report`, or part of a recently opened file's name | open | reveal its folder |
+| Recent | `recent`, `recent report`, or part of a recently opened file's name | open | reveal its folder |
 | Windows | part of a window title or app name | focus it | focus it |
 | Command | `> htop` | run in a terminal | run in the background |
 | Kill | `kill firefox` | `kill` (SIGTERM) | `kill -KILL` |
 | Clipboard | `cb`, `cb git`, `cb scr` (images), `cb list` | paste into the previous window | copy only |
-| Web | `dd query`, `gg query`, `yt query`, `wiki query` | open in the browser | copy the URL |
+| Web | `dd query`, `gg query`, `yt query`, `wiki query`, or `dd:query` | open in the browser | copy the URL |
 | IMDb | `imdb inception` | open the IMDb page | copy the URL |
-| Linkding | `ld rust`, `linkding #tag` | open the bookmark | copy the URL |
+| Linkding | `ld rust`, `ld:rust`, `linkding #tag`, bare `ld` | open the bookmark | copy the URL |
 | History | `!!`, `!! rust` | reopen the selected result | — |
 | Services | `svc nginx`, `service docker`, `unit ssh` | start/restart | stop |
-| Browser | `bm rust` (bookmarks), `bh rust` (history) | open the URL | copy the URL |
+| Browser bookmarks | `bm rust`, `bookmarks rust` | open the URL | copy the URL |
+| Browser history | `bh rust`, `bhistory rust` | open the URL | copy the URL |
 
-Prefixes (`cb`, `>`, `kill`, `recent`, `t`, `uuid`, `imdb`, `ld`, `!!`, `svc`, `bm`/`bh`,
-`dd`/`gg`/`yt`/`wiki` followed by a query) hand the whole list to that one source.
-Clipboard history appears only behind `cb`, so copied secrets never show in an
-ordinary search. Browser data currently comes from Chromium-family profiles
-(Chromium, Chrome, Brave, Edge).
+`!!` records launchable results only. Clipboard entries, shell commands, kill
+results and generated values/passwords are deliberately excluded. Browser data
+currently comes from Chromium-family profiles (Chromium, Chrome, Brave, Edge).
+The first nine results in any list launch with `Ctrl+1` … `Ctrl+9`.
 
 ### Linkding configuration
 
@@ -284,6 +291,7 @@ ranked by `fzf`.
 | `Escape` | clear the query, then close; on the Sources or Settings page, go back |
 | `Backspace` / `Left` on an empty query | back out of a submenu |
 | `Ctrl+P` | pin or unpin the selected result (Favorites) |
+| `Ctrl+V` / `Shift+Insert` | paste text into the search or a Settings Custom… field |
 | `Ctrl+Up` / `Ctrl+Down` on Settings → Favorites | move the pinned item up or down |
 | `Ctrl+,` or the filter button (top left) | Sources page, press again to close |
 | `Ctrl+S` or the gear (top right) | Settings page, press again to close |
@@ -298,12 +306,13 @@ Omarchy and Session can be switched off the same way.
 
 The **Omarunner Settings** page (gear, `Ctrl+S`) holds: accent colour, border,
 category column, corner radius, Ctrl+number hints, Favorites, font, fuzzy
-matching, hint size, position, opacity, Recent launches, row height, rows before
-scrolling, text size, the version and GitHub link, and width. On/off settings show an **ON**/**OFF** badge after their
-name; a choice (open it to see the presets, the current one has a dot) offers
-presets and a **Custom…** entry: open the setting and type a value (a number in
-the range the row names, a font name, or a `#rrggbb` colour for the accent),
-then pick the **Use …** row.
+matching, hint size, position, opacity, Recent launches, Linkding URL, Linkding
+API key, row height, rows before scrolling, text size, the version and GitHub
+link, and width. On/off settings show an **ON**/**OFF** badge after their name; a
+choice (open it to see the presets, the current one has a dot) offers presets and
+a **Custom…** entry: open the setting and type or paste a value (a number in the
+range the row names, a font name, a `#rrggbb` colour for the accent, or the
+Linkding URL/token), then pick the **Use …** row.
 
 The **accent colour** is the theme's own by default; pick another colour from the
 theme's palette, or type a hex colour. It colours the selected row, the
@@ -324,10 +333,12 @@ pick how many show (3, 5, 8, All or a typed number).
 
 **Recent launches** (a switch, off by default, with 3, 5, 8 or a typed number to
 show) lists what you launched last, under the favorites, instead of the bare
-input line. Only apps, files, folders (including recent files) and menu actions
-are recorded: never clipboard entries, typed commands, kill, calculator or web
-searches. Apps that were uninstalled and files that no longer exist are left out
-of the list. Favorites and history live in `~/.local/state/omarunner/history.json`,
+input line. The same list powers `!!` global history. It records launchable
+results such as apps, menu actions, files/folders/recent, locations, web/IMDb/
+Linkding/browser results, services and calculator/time results. Clipboard
+entries, shell commands, kill results and generated values/passwords are
+deliberately excluded. Apps that were uninstalled and files that no longer exist
+are left out of the list. Favorites and history live in `~/.local/state/omarunner/history.json`,
 in a private directory, because it stores the commands of launched menu actions.
 
 Both pages are stored in `~/.config/omarchy/omarunner.json` (`sources`,
