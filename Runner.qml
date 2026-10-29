@@ -690,7 +690,12 @@ Item {
     if (serial !== root.searchSerial) return
     var next = ({})
     for (var key in root.sourceRows) next[key] = root.sourceRows[key]
-    next[sourceId] = rows
+    // Signal parameters typed as `var` can arrive as a QVariantList, for which
+    // Array.isArray() is false. Normalize to a plain JS array so buildRows
+    // recognizes the rows.
+    var cleanRows = []
+    for (var r = 0; r < (rows ? rows.length : 0); r++) cleanRows.push(rows[r])
+    next[sourceId] = cleanRows
     root.sourceRows = next
     root.rebuildDisplay()
   }
