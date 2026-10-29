@@ -227,10 +227,29 @@ Folders, Files and Recent. A search that matches nothing offers a web search.
 | Kill | `kill firefox` | `kill` (SIGTERM) | `kill -KILL` |
 | Clipboard | `cb`, `cb git`, `cb scr` (images), `cb list` | paste into the previous window | copy only |
 | Web | `dd query`, `gg query`, `yt query`, `wiki query` | open in the browser | copy the URL |
+| IMDb | `imdb inception`, `imdb titles dune` | open the IMDb page | copy the URL |
+| Linkding | `ld rust`, `linkding #tag` | open the bookmark | copy the URL |
 
-Prefixes (`cb`, `>`, `kill`, `recent`, `dd`/`gg`/`yt`/`wiki` followed by a query)
-hand the whole list to that one source. Clipboard history appears only behind `cb`, so
-copied secrets never show in an ordinary search.
+Prefixes (`cb`, `>`, `kill`, `recent`, `t`, `uuid`, `imdb`, `ld`, `dd`/`gg`/`yt`/`wiki`
+followed by a query) hand the whole list to that one source. Clipboard history
+appears only behind `cb`, so copied secrets never show in an ordinary search.
+
+### Linkding configuration
+
+Add the instance URL and an API token to `~/.config/omarchy/omarunner.json`:
+
+```json
+{
+  "linkding": {
+    "url": "https://linkding.example.com",
+    "apiKey": "your-linkding-api-token"
+  }
+}
+```
+
+Create the token in Linkding under **Settings → API**. Use `ld query` or
+`linkding query`; a bare `ld` lists the newest bookmarks. The token stays in the
+local config file and is only sent to the configured instance.
 
 Folder names forgive case and small typos. With fuzzy matching on (the
 default), letters typed in order also match: `frfox` finds Firefox, and files are

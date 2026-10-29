@@ -141,7 +141,7 @@ Item {
   property int categoryWidth: root.showCategories ? Style.space(120) : 0
   property bool searchDivider: false
   property int layoutSerial: 0
-  property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource]
+  property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource, imdbSource, linkdingSource]
   property var sourceRows: ({})
   property int searchSerial: 0
   property var sectionLabels: ({})
@@ -1025,6 +1025,17 @@ Item {
     id: webSource
     searchUrl: sourceConfig.config.webSearchUrl || ""
     onResults: function(serial, rows) { root.acceptSourceRows(webSource.sourceId, serial, rows) }
+  }
+
+  ImdbSource {
+    id: imdbSource
+    onResults: function(serial, rows) { root.acceptSourceRows(imdbSource.sourceId, serial, rows) }
+  }
+
+  LinkdingSource {
+    id: linkdingSource
+    linkdingConfig: sourceConfig.config.linkding || ({})
+    onResults: function(serial, rows) { root.acceptSourceRows(linkdingSource.sourceId, serial, rows) }
   }
 
   FileView {
