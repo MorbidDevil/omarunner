@@ -1,7 +1,7 @@
-// Chromium-family browser bookmarks and history.
+// Chromium-family and Firefox browser bookmarks/history.
 // "bm query" searches bookmarks; "bh query" searches history. Both read the
-// browser profile read-only through jq/sqlite3; the history DB is copied to a
-// temp file first so an open browser does not lock it.
+// browser profile read-only through jq/sqlite3; history DBs are copied to temp
+// files first so an open browser does not lock them.
 
 function trim(value) { return String(value || "").trim() }
 
@@ -20,21 +20,35 @@ function claims(query) { return parse(query) !== null }
 
 function bookmarksArgs() {
   return ["bash", "-lc",
+    'found=0; ' +
     'for p in "$HOME/.config/chromium/Default/Bookmarks" "$HOME/.config/google-chrome/Default/Bookmarks" ' +
     '"$HOME/.config/BraveSoftware/Brave-Browser/Default/Bookmarks" "$HOME/.config/microsoft-edge/Default/Bookmarks"; do ' +
     '[ -f "$p" ] || continue; ' +
-    'jq -r \'.. | objects | select(.type? == "url") | [.name, .url] | @tsv\' "$p" && exit 0; done; exit 1']
+    'jq -r \'.. | objects | select(.type? == "url") | [.name, .url] | @tsv\' "$p" && found=1; done; ' +
+    'for p in "$HOME"/.mozilla/firefox/*/places.sqlite; do ' +
+    '[ -f "$p" ] || continue; ' +
+    'tmp=$(mktemp "${TMPDIR:-/tmp}/omarunner-firefox.XXXXXX") || continue; ' +
+    'cp -- "$p" "$tmp" 2>/dev/null || { rm -f -- "$tmp"; continue; }; ' +
+    'sqlite3 -separator $\'\\t\' "$tmp" \'SELECT COALESCE(b.title,p.url),p.url FROM moz_bookmarks b JOIN moz_places p ON b.fk=p.id WHERE b.type=1 ORDER BY b.dateAdded DESC LIMIT 500;\' ' +
+    '&& found=1; rm -f -- "$tmp"; done; [ "$found" = 1 ] && exit 0; exit 1']
 }
 
 function historyArgs() {
   return ["bash", "-lc",
+    'found=0; ' +
     'for p in "$HOME/.config/chromium/Default/History" "$HOME/.config/google-chrome/Default/History" ' +
     '"$HOME/.config/BraveSoftware/Brave-Browser/Default/History" "$HOME/.config/microsoft-edge/Default/History"; do ' +
     '[ -f "$p" ] || continue; ' +
     'tmp=$(mktemp "${TMPDIR:-/tmp}/omarunner-history.XXXXXX") || continue; ' +
     'cp -- "$p" "$tmp" 2>/dev/null || { rm -f -- "$tmp"; continue; }; ' +
     'sqlite3 -separator $\'\\t\' "$tmp" \'SELECT title,url FROM urls ORDER BY last_visit_time DESC LIMIT 500;\' ' +
-    '&& { rm -f -- "$tmp"; exit 0; }; rm -f -- "$tmp"; done; exit 1']
+    '&& found=1; rm -f -- "$tmp"; done; ' +
+    'for p in "$HOME"/.mozilla/firefox/*/places.sqlite; do ' +
+    '[ -f "$p" ] || continue; ' +
+    'tmp=$(mktemp "${TMPDIR:-/tmp}/omarunner-firefox.XXXXXX") || continue; ' +
+    'cp -- "$p" "$tmp" 2>/dev/null || { rm -f -- "$tmp"; continue; }; ' +
+    'sqlite3 -separator $\'\\t\' "$tmp" \'SELECT COALESCE(p.title,p.url),p.url FROM moz_places p JOIN moz_historyvisits v ON v.place_id=p.id GROUP BY p.id ORDER BY MAX(v.visit_date) DESC LIMIT 500;\' ' +
+    '&& found=1; rm -f -- "$tmp"; done; [ "$found" = 1 ] && exit 0; exit 1']
 }
 
 function host(url) {
@@ -76,7 +90,7 @@ function rowsFor(query, exitCode, output) {
   if (!parsed) return []
   var groupLabel = parsed.kind === "bookmarks" ? "Bookmarks" : "History"
   if (exitCode !== 0) return [messageRow("No browser data found",
-    "No Chromium/Chrome/Brave/Edge profile found", parsed.kind, groupLabel)]
+    "No Chromium, Chrome, Brave, Edge or Firefox profile found", parsed.kind, groupLabel)]
 
   var terms = parsed.term.toLowerCase().split(/\s+/).filter(function(t) { return t.length > 0 })
   var entries = parseTsv(output)

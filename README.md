@@ -223,7 +223,7 @@ space forms.
 | Session | `lock`, `sleep`, `restart`, `shutdown`, `power off` | run it | — |
 | Calculator | `2+2*3`, `=2`, `(1+2)*3` | copy the result | copy the result |
 | Unit conversion (qalc) | `10 km to mi`, `100f to c`, `5 usd in eur`, `20% of 300` | copy the result | copy the result |
-| Time & date | `t`, `time`, `date`, `now`, `ts`, `unix`, `week`, `t utc`, `t utc+2`, `t +2h`, `t -30m` | copy the result | copy the result |
+| Time & date | `t`, `time`, `date`, `now`, `ts`, `unix`, `week`, `t utc`, `t utc+2`, `t +2h`, `t -30m`, `t Europe/Berlin`, `date format %Y-%m-%d` | copy the result | copy the result |
 | Values | `uuid`, `uuid4`, `uuid7`, `guid`, `b64 text`, `base64 text`, `b64d …`, `sha256 text`, `md5 text`, `hex 16`, `pw 24`, `rand 1 100`, `lorem 3` | copy the result | copy the result |
 | Open | `github.com/x`, `https://…`, `localhost:8080`, `~/Downloads`, `/etc` | open it | copy the URL / reveal the folder |
 | Folders | `documents`, `docmuents`, `etc`, `hypr` | open the folder | terminal in the folder |
@@ -243,8 +243,12 @@ space forms.
 
 `!!` records launchable results only. Clipboard entries, shell commands, kill
 results and generated values/passwords are deliberately excluded. Browser data
-currently comes from Chromium-family profiles (Chromium, Chrome, Brave, Edge).
+comes from Chromium-family profiles (Chromium, Chrome, Brave, Edge) and Firefox.
 The first nine results in any list launch with `Ctrl+1` … `Ctrl+9`.
+
+Named time zones use IANA names such as `Europe/Berlin` or
+`America/New_York`; custom date formats use `strftime` patterns, for example
+`date format %A, %d %B %Y` or `t Europe/Berlin format %H:%M`.
 
 ### Linkding configuration
 
@@ -274,8 +278,8 @@ local config file and is only sent to the configured instance.
 - `!!` lists results you selected before; `!! query` filters them.
 - `svc query` searches systemd services. Enter starts an inactive unit or
   restarts an active one; Shift+Enter stops it. Polkit may ask for authentication.
-- `bm query` searches Chromium-family bookmarks; `bh query` searches their
-  history. Enter opens the URL, Shift+Enter copies it.
+- `bm query` searches Chromium-family and Firefox bookmarks; `bh query` searches
+  their history. Enter opens the URL, Shift+Enter copies it.
 
 Folder names forgive case and small typos. With fuzzy matching on (the
 default), letters typed in order also match: `frfox` finds Firefox, and files are

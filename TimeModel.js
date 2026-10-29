@@ -13,7 +13,7 @@ function pad2(value) {
   return n < 10 ? "0" + n : String(n)
 }
 
-function localZone() { return { shift: 0, useUTC: false, label: "Local time" } }
+function localZone() { return { kind: "local", shift: 0, useUTC: false, label: "Local time", tz: "" } }
 
 function relativeLabel(sign, amount, unit) {
   var noun = unit === "h"
@@ -25,7 +25,7 @@ function relativeLabel(sign, amount, unit) {
 function parseZone(arg) {
   var low = trim(arg).toLowerCase()
   if (!low) return localZone()
-  if (low === "utc" || low === "gmt" || low === "z") return { shift: 0, useUTC: true, label: "UTC" }
+  if (low === "utc" || low === "gmt" || low === "z") return { kind: "utc", shift: 0, useUTC: true, label: "UTC", tz: "UTC" }
 
   var m = /^utc([+-])(\d{1,2})(?::?(\d{2}))?$/.exec(low)
   if (m) {
@@ -34,9 +34,11 @@ function parseZone(arg) {
     if (!isFinite(hours) || !isFinite(minutes) || hours > 14 || minutes > 59) return null
     var sign = m[1] === "-" ? -1 : 1
     return {
+      kind: "offset",
       shift: sign * (hours * 60 + minutes) * 60000,
       useUTC: true,
-      label: "UTC" + m[1] + hours + (minutes ? ":" + pad2(minutes) : "")
+      label: "UTC" + m[1] + hours + (minutes ? ":" + pad2(minutes) : ""),
+      tz: "UTC"
     }
   }
 
@@ -46,7 +48,7 @@ function parseZone(arg) {
     if (!isFinite(amount) || amount <= 0) return null
     var unit = m[3]
     var delta = (unit === "h" ? amount * 3600000 : amount * 60000) * (m[1] === "-" ? -1 : 1)
-    return { shift: delta, useUTC: false, label: relativeLabel(m[1], amount, unit) }
+    return { kind: "relative", shift: delta, useUTC: false, label: relativeLabel(m[1], amount, unit), tz: "" }
   }
 
   m = /^([+-])(\d{1,2}):(\d{2})$/.exec(low)
@@ -57,10 +59,18 @@ function parseZone(arg) {
     var total = h * 3600000 + min * 60000
     var dir = m[1] === "-" ? -1 : 1
     return {
+      kind: "relative",
       shift: dir * total,
       useUTC: false,
-      label: (m[1] === "+" ? "In " : "") + h + "h" + pad2(min) + (m[1] === "+" ? "" : " ago")
+      label: (m[1] === "+" ? "In " : "") + h + "h" + pad2(min) + (m[1] === "+" ? "" : " ago"),
+      tz: ""
     }
+  }
+
+  // IANA names always contain a slash (Europe/Berlin, America/New_York,
+  // Etc/GMT+2). Keeping the slash requirement avoids claiming ordinary words.
+  if (/^[A-Za-z][A-Za-z0-9_+\-]*(?:\/[A-Za-z0-9_+\-]+)+$/.test(arg)) {
+    return { kind: "named", shift: 0, useUTC: false, label: arg, tz: arg }
   }
 
   return null
@@ -73,22 +83,47 @@ function parse(query) {
     var key = m[1].toLowerCase()
     var arg = trim(m[2] || "")
     var mode = key === "time" ? "time" : key === "date" ? "date" : "now"
-    var zone = localZone()
+
+    // "t time utc", "t utc date", "t week Europe/Berlin"
+    var modeMatch = /^(time|date|now|week|ts|unix)\b(?:\s+([\s\S]*))?$/i.exec(arg)
+    if (modeMatch) {
+      mode = modeMatch[1].toLowerCase()
+      if (mode === "unix") mode = "ts"
+      arg = trim(modeMatch[2] || "")
+    }
+
+    // "t format %Y-%m-%d", "t Europe/Berlin format %H:%M"
+    var format = ""
     if (arg) {
-      var low = arg.toLowerCase()
-      if (low === "time" || low === "date" || low === "now" ||
-          low === "week" || low === "ts" || low === "unix") {
-        mode = low === "ts" || low === "unix" ? "ts" : low
+      var fm = /^(.*?)\s+format\s+([\s\S]+)$/i.exec(arg)
+      if (fm) {
+        arg = trim(fm[1])
+        format = trim(fm[2])
       } else {
-        zone = parseZone(arg)
-        if (!zone) return null
+        var onlyFormat = /^format\s+([\s\S]+)$/i.exec(arg)
+        if (onlyFormat) {
+          arg = ""
+          format = trim(onlyFormat[1])
+        } else if (/^format$/i.test(arg)) {
+          return null
+        }
       }
     }
-    return { mode: mode, zone: zone, arg: arg }
+
+    var zone = localZone()
+    if (arg) {
+      zone = parseZone(arg)
+      if (!zone) return null
+    }
+    if (format) {
+      format = format.replace(/^\s*\+/, "").trim()
+      if (!format || format.length > 120) return null
+    }
+    return { mode: mode, zone: zone, arg: arg, format: format }
   }
 
-  if (/^(ts|unix)$/i.test(q)) return { mode: "ts", zone: localZone(), arg: "" }
-  if (/^week$/i.test(q)) return { mode: "week", zone: localZone(), arg: "" }
+  if (/^(ts|unix)$/i.test(q)) return { mode: "ts", zone: localZone(), arg: "", format: "" }
+  if (/^week$/i.test(q)) return { mode: "week", zone: localZone(), arg: "", format: "" }
   return null
 }
 
@@ -142,6 +177,8 @@ function row(label, detail, value, icon) {
 function rowsFor(query, nowMs) {
   var parsed = parse(query)
   if (!parsed) return []
+  if (parsed.format) return []
+  if (parsed.zone.kind === "named" && parsed.mode !== "ts") return []
   var now = new Date(Number(nowMs) || Date.now())
   var zone = parsed.zone
   var date = shifted(now, zone)
@@ -170,6 +207,58 @@ function rowsFor(query, nowMs) {
   return [timeRow, dateRow]
 }
 
+function needsDateProcess(parsed) {
+  return !!parsed && (!!parsed.format || (parsed.zone.kind === "named" && parsed.mode !== "ts"))
+}
+
+function dateArgs(parsed, nowMs) {
+  var now = Number(nowMs) || Date.now()
+  var seconds = Math.floor((now + (parsed.zone.shift || 0)) / 1000)
+  var pattern = parsed.format || "%Y-%m-%d|%H:%M:%S|%A|%B|%G|%V"
+  var args = ["env", "LC_ALL=C"]
+  if (parsed.zone.kind === "named") args.push("TZ=" + parsed.zone.tz)
+  else if (parsed.zone.useUTC) args.push("TZ=UTC")
+  args.push("date", "-d", "@" + seconds, "+" + pattern)
+  return args
+}
+
+function rowsFromDate(query, exitCode, output) {
+  var parsed = parse(query)
+  if (!parsed) return []
+  if (exitCode !== 0) return [row("Time zone not found", "Check the IANA zone name", "", "preferences-system-time")]
+
+  var text = String(output || "").trim()
+  if (!text) return [row("Time zone not found", "Check the IANA zone name", "", "preferences-system-time")]
+
+  if (parsed.format) {
+    return [row(text, "Format · " + parsed.format, text, "x-office-calendar")]
+  }
+
+  var parts = text.split("|")
+  if (parts.length < 6) return [row("Time zone not found", "Check the IANA zone name", "", "preferences-system-time")]
+  var iso = parts[0].trim()
+  var clock = parts[1].trim()
+  var weekday = parts[2].trim()
+  var month = parts[3].trim()
+  var isoYear = parts[4].trim()
+  var week = parts[5].trim()
+  var day = Number(iso.slice(8, 10))
+  if (!isFinite(day)) day = 1
+  var human = weekday + ", " + day + " " + month + " " + iso.slice(0, 4)
+  var zoneLabel = parsed.zone.label
+
+  if (parsed.mode === "week") {
+    var weekValue = isoYear + "-W" + pad2(Number(week))
+    return [row(weekValue, "ISO week · " + human, weekValue, "x-office-calendar")]
+  }
+
+  var timeRow = row(clock, zoneLabel + " · " + human, clock)
+  var dateRow = row(human, iso + " · ISO week " + Number(week), iso, "x-office-calendar")
+  if (parsed.mode === "time") return [timeRow]
+  if (parsed.mode === "date") return [dateRow]
+  return [timeRow, dateRow]
+}
+
 function claims(query) { return parse(query) !== null }
 
 function copyArgv(value) { return value ? ["wl-copy", "--", String(value)] : [] }
@@ -177,6 +266,7 @@ function copyArgv(value) { return value ? ["wl-copy", "--", String(value)] : [] 
 if (typeof module !== "undefined") {
   module.exports = {
     parse: parse, claims: claims, rowsFor: rowsFor, copyArgv: copyArgv,
+    needsDateProcess: needsDateProcess, dateArgs: dateArgs, rowsFromDate: rowsFromDate,
     formatTime: formatTime, formatDateValue: formatDateValue, formatDateHuman: formatDateHuman, isoWeek: isoWeek
   }
 }

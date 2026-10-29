@@ -9,7 +9,7 @@ Item {
   id: root
   property string sourceId: "time"
   property string groupLabel: "Time & Date"
-  property string hint: "t · time · date · now · ts · week · t utc · t +2h"
+  property string hint: "t · time · date · now · t Europe/Berlin · date format %Y-%m-%d"
   property int maxRows: 3
   property bool enabled: true
   signal results(int serial, var rows)
@@ -17,13 +17,26 @@ Item {
   function claims(query) { return TimeModel.claims(query) }
 
   function search(query, serial) {
+    var parsed = TimeModel.parse(query)
+    if (!parsed) { root.results(serial, []); return }
+    if (TimeModel.needsDateProcess(parsed)) {
+      runner.run(TimeModel.dateArgs(parsed, Date.now()), serial, query)
+      return
+    }
     root.results(serial, TimeModel.rowsFor(query, Date.now()))
   }
 
-  function cancel() {}
+  function cancel() { runner.cancel() }
 
   function activate(value, modifiers) {
     var argv = TimeModel.copyArgv(value)
     if (argv.length) Util.execArgv(argv)
+  }
+
+  LatestProcess {
+    id: runner
+    onFinished: function(serial, query, exitCode, output) {
+      root.results(serial, TimeModel.rowsFromDate(query, exitCode, output))
+    }
   }
 }

@@ -19,6 +19,13 @@ test("browser claims bm/bookmarks and bh/bhistory", () => {
   assert.deepEqual(B.parse("bh"), { kind: "history", term: "" })
 })
 
+test("browser commands include Firefox places.sqlite queries", () => {
+  assert.match(B.bookmarksArgs()[2], /moz_bookmarks/)
+  assert.match(B.bookmarksArgs()[2], /\.mozilla\/firefox/)
+  assert.match(B.historyArgs()[2], /moz_historyvisits/)
+  assert.match(B.historyArgs()[2], /\.mozilla\/firefox/)
+})
+
 test("parseTsv keeps only http(s) URLs", () => {
   assert.deepEqual(B.parseTsv(TSV), [
     { title: "Rust language", url: "https://www.rust-lang.org/" },
