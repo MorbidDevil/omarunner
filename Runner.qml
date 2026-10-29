@@ -141,7 +141,7 @@ Item {
   property int categoryWidth: root.showCategories ? Style.space(120) : 0
   property bool searchDivider: false
   property int layoutSerial: 0
-  property var sources: [calcSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource]
+  property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource]
   property var sourceRows: ({})
   property int searchSerial: 0
   property var sectionLabels: ({})
@@ -984,6 +984,16 @@ Item {
   CalcSource {
     id: calcSource
     onResults: function(serial, rows) { root.acceptSourceRows(calcSource.sourceId, serial, rows) }
+  }
+
+  TimeSource {
+    id: timeSource
+    onResults: function(serial, rows) { root.acceptSourceRows(timeSource.sourceId, serial, rows) }
+  }
+
+  ValueSource {
+    id: valueSource
+    onResults: function(serial, rows) { root.acceptSourceRows(valueSource.sourceId, serial, rows) }
   }
 
   LocationSource {

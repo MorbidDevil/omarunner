@@ -5,7 +5,8 @@ root menu on `SUPER + SPACE`: with nothing typed it is one input line, and the
 first keystroke expands it into results grouped by kind, with the group name in
 a column on the left: applications, the whole Omarchy menu tree, session actions,
 folders, files, recent files, open windows, a calculator with unit conversion,
-and more. The first nine results launch with `Ctrl+1` to `Ctrl+9`.
+time/date lookups, generated values, and more. The first nine results launch
+with `Ctrl+1` to `Ctrl+9`.
 
 It is a fork of the first-party `omarchy.menu` plugin, so it follows the active
 Omarchy theme with no configuration.
@@ -215,6 +216,8 @@ Folders, Files and Recent. A search that matches nothing offers a web search.
 | Session | `lock`, `sleep`, `restart`, `power off` | run it | — |
 | Calculator | `2+2*3`, `=2` | copy the result | copy the result |
 | Unit conversion (qalc) | `10 km to mi`, `100f to c`, `5 usd in eur`, `20% of 300` | copy the result | copy the result |
+| Time & date | `t`, `time`, `date`, `now`, `ts`, `week`, `t utc`, `t utc+2`, `t +2h`, `t -30m` | copy the result | copy the result |
+| Values | `uuid`, `uuid4`, `uuid7`, `b64 text`, `b64d …`, `sha256 text`, `md5 text`, `hex 16`, `pw 24`, `rand 1 100`, `lorem 3` | copy the result | copy the result |
 | Open | `github.com/x`, `https://…`, `localhost:8080`, `~/Downloads`, `/etc` | open it | copy the URL / reveal the folder |
 | Folders | `documents`, `docmuents`, `etc`, `hypr` | open the folder | terminal in the folder |
 | Files | `bindlua`, `invoice pdf` | open the file | reveal its folder |
