@@ -641,6 +641,10 @@ Item {
     revealCursor()
   }
 
+  function pasteClipboard() {
+    if (!pasteProc.running) pasteProc.running = true
+  }
+
   function setFilter(nextFilter) {
     panel.freezeCardTop()
     root.filterText = nextFilter
@@ -1093,6 +1097,23 @@ Item {
     onTriggered: root.runSources()
   }
 
+  // Ctrl+V inserts the text clipboard into the search/custom-setting field.
+  Process {
+    id: pasteProc
+    command: ["wl-paste", "--no-newline"]
+    stdout: StdioCollector {
+      id: pasteOutput
+      waitForEnd: true
+      onStreamFinished: {
+        if (!root.opened) return
+        var value = String(pasteOutput.text || "").replace(/\r?\n/g, " ").trim()
+        if (!value) return
+        if (value.length > 2048) value = value.slice(0, 2048)
+        root.setFilter(root.filterText + value)
+      }
+    }
+  }
+
   ListModel { id: displayModel }
 
   // ----------------------------------------------------------- route surface
@@ -1393,6 +1414,12 @@ Item {
             event.accepted = true
           } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_Comma) {
             root.toggleSourcesPage()
+            event.accepted = true
+          } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) {
+            root.pasteClipboard()
+            event.accepted = true
+          } else if ((event.modifiers & Qt.ShiftModifier) && event.key === Qt.Key_Insert) {
+            root.pasteClipboard()
             event.accepted = true
           } else if (event.key === Qt.Key_Delete) {
             root.requestDeleteSelected()

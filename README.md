@@ -242,8 +242,9 @@ ordinary search. Browser data currently comes from Chromium-family profiles
 ### Linkding configuration
 
 Open omarunner's Settings with `Ctrl+S`, then choose **Linkding URL** and
-**Linkding API key**, pick **Custom…**, and type the values. The API key is shown
-as “Configured” rather than in clear text.
+**Linkding API key**, pick **Custom…**, and type or paste (`Ctrl+V` /
+`Shift+Insert`) the values. The API key is shown as “Configured” rather than in
+clear text.
 
 Alternatively, add the instance URL and token to
 `~/.config/omarchy/omarunner.json`:

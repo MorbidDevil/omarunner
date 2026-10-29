@@ -228,6 +228,12 @@ test("the runner registers every source and gives claimed queries to their sourc
 
 // -- Settings page and fuzzy matching.
 
+test("Ctrl+V pastes into filter and custom-setting fields", () => {
+  assert.ok(qml.includes("event.key === Qt.Key_V"))
+  assert.ok(qml.includes('["wl-paste", "--no-newline"]'))
+  assert.ok(qml.includes("root.setFilter(root.filterText + value)"))
+})
+
 test("the gear button and Ctrl+S open the Settings page", () => {
   assert.match(qml, /function toggleSettingsPage\(\)/)
   assert.ok(qml.includes("event.key === Qt.Key_S"))

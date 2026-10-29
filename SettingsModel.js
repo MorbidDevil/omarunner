@@ -200,8 +200,8 @@ function hasCustom(key) {
 function customHint(key) {
   if (key === "fontFamily") return "Type a font name"
   if (key === "accent") return "Type a hex colour, like #ff8800"
-  if (key === "linkdingUrl") return "Type the Linkding base URL"
-  if (key === "linkdingApiKey") return "Type the Linkding API token"
+  if (key === "linkdingUrl") return "Type or Ctrl+V paste the Linkding base URL"
+  if (key === "linkdingApiKey") return "Type or Ctrl+V paste the Linkding API token"
   var range = RANGES()[key]
   return "Type a number, " + range[0] + "–" + range[1]
 }

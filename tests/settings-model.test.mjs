@@ -24,8 +24,8 @@ test("Linkding URL and token are editable text settings", () => {
   const page = S.pageRows(S.resolve({ settings: { linkdingUrl: "https://ld.example", linkdingApiKey: "secret" } }))
   assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingUrl").label, "Linkding URL · https://ld.example")
   assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingApiKey").label, "Linkding API key · Configured")
-  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingUrl.custom").description, "Type the Linkding base URL")
-  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingApiKey.custom").description, "Type the Linkding API token")
+  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingUrl.custom").description, "Type or Ctrl+V paste the Linkding base URL")
+  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingApiKey.custom").description, "Type or Ctrl+V paste the Linkding API token")
   assert.equal(page.checked["omarunner-settings.linkdingApiKey.custom"], true)
 })
 

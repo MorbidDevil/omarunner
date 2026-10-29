@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "videinfra.omarunner",
   "name": "omarunner",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": "thevideinfra",
   "license": "MIT",
   "description": "KRunner-style launcher for Omarchy: apps, the Omarchy menu, files, folders, open windows, calculator and unit conversion, time/date lookups, UUID/Base64/hash/random value generation, IMDb, Linkding, browser bookmarks/history, systemd services and global history, clipboard history, shell commands and web search, with Ctrl+number quick launch and in-launcher settings",
