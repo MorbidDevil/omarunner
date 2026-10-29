@@ -10,13 +10,16 @@ const file = { itemId: "files./home/ks/a.txt", kind: "source", icon: "text-x-gen
 const menu = { itemId: "style.theme", kind: "action", icon: "", iconFont: "", appIcon: "", appId: "", label: "Theme",
   target: "", detail: "", action: "omarchy-theme-menu", sourceId: "", value: "" }
 
-test("only apps, files, folders, recent files and menu actions are recorded", () => {
+test("global history records launchable results but not secrets or one-off sources", () => {
   assert.equal(H.recordable(app), true)
   assert.equal(H.recordable(file), true)
   assert.equal(H.recordable({ ...file, sourceId: "folders" }), true)
   assert.equal(H.recordable({ ...file, sourceId: "recent" }), true)
   assert.equal(H.recordable(menu), true)
-  for (const sourceId of ["clipboard", "command", "kill", "calc", "web", "windows", "locations"]) {
+  for (const sourceId of ["calc", "web", "windows", "locations", "imdb", "browser"]) {
+    assert.equal(H.recordable({ ...file, sourceId }), true, sourceId)
+  }
+  for (const sourceId of ["clipboard", "command", "kill", "values", "history"]) {
     assert.equal(H.recordable({ ...file, sourceId }), false, sourceId)
   }
   assert.equal(H.recordable({ ...menu, itemId: "omarunner-settings.keys" }), false)
@@ -111,6 +114,21 @@ test("favoritesShown caps or hides the favorites; pinned items stay out of histo
   assert.deepEqual(H.startGroups(favs, [], 0, 0), [])
   const hist = H.record([], favs[0], 1, 50)
   assert.deepEqual(H.startGroups(favs, hist, 5, 0), [])
+})
+
+test("!! lists and filters the global history", () => {
+  let h = []
+  h = H.record(h, H.entryFromRow(app), 1, 50)
+  h = H.record(h, H.entryFromRow(file), 2, 50)
+  h = H.record(h, H.entryFromRow({ ...file, sourceId: "web", label: "DuckDuckGo", detail: "", value: "https://ddg.example/?q=rust" }), 3, 50)
+  assert.equal(H.claims("!!"), true)
+  assert.equal(H.claims("!! rust"), true)
+  assert.equal(H.claims("!!! rust"), false)
+  assert.equal(H.claims("rust"), false)
+  assert.deepEqual(H.search(h, "!!").map(r => r.label), ["DuckDuckGo", "a.txt", "Firefox"])
+  assert.deepEqual(H.search(h, "!! rust").map(r => r.label), ["DuckDuckGo"])
+  assert.deepEqual(H.search(h, "!! a.txt").map(r => r.value), ["/home/ks/a.txt"])
+  assert.deepEqual(H.search(h, "!!", 2).map(r => r.label), ["DuckDuckGo", "a.txt"])
 })
 
 test("sameKeys compares lists by key, optionally by order", () => {

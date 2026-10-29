@@ -229,10 +229,15 @@ Folders, Files and Recent. A search that matches nothing offers a web search.
 | Web | `dd query`, `gg query`, `yt query`, `wiki query` | open in the browser | copy the URL |
 | IMDb | `imdb inception` | open the IMDb page | copy the URL |
 | Linkding | `ld rust`, `linkding #tag` | open the bookmark | copy the URL |
+| History | `!!`, `!! rust` | reopen the selected result | — |
+| Services | `svc nginx`, `service docker`, `unit ssh` | start/restart | stop |
+| Browser | `bm rust` (bookmarks), `bh rust` (history) | open the URL | copy the URL |
 
-Prefixes (`cb`, `>`, `kill`, `recent`, `t`, `uuid`, `imdb`, `ld`, `dd`/`gg`/`yt`/`wiki`
-followed by a query) hand the whole list to that one source. Clipboard history
-appears only behind `cb`, so copied secrets never show in an ordinary search.
+Prefixes (`cb`, `>`, `kill`, `recent`, `t`, `uuid`, `imdb`, `ld`, `!!`, `svc`, `bm`/`bh`,
+`dd`/`gg`/`yt`/`wiki` followed by a query) hand the whole list to that one source.
+Clipboard history appears only behind `cb`, so copied secrets never show in an
+ordinary search. Browser data currently comes from Chromium-family profiles
+(Chromium, Chrome, Brave, Edge).
 
 ### Linkding configuration
 
@@ -255,6 +260,14 @@ Alternatively, add the instance URL and token to
 Create the token in Linkding under **Settings → API**. Use `ld query` or
 `linkding query`; a bare `ld` lists the newest bookmarks. The token stays in the
 local config file and is only sent to the configured instance.
+
+### History, services and browser data
+
+- `!!` lists results you selected before; `!! query` filters them.
+- `svc query` searches systemd services. Enter starts an inactive unit or
+  restarts an active one; Shift+Enter stops it. Polkit may ask for authentication.
+- `bm query` searches Chromium-family bookmarks; `bh query` searches their
+  history. Enter opens the URL, Shift+Enter copies it.
 
 Folder names forgive case and small typos. With fuzzy matching on (the
 default), letters typed in order also match: `frfox` finds Firefox, and files are

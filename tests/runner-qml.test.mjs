@@ -195,7 +195,7 @@ test("every source file implements the source interface", async () => {
 
 test("sources built from user text run argv, never a shell string", async () => {
   for (const file of ["CalcSource.qml", "TimeSource.qml", "ValueSource.qml", "CommandSource.qml", "KillSource.qml", "ClipboardSource.qml", "FolderSource.qml",
-    "WindowSource.qml", "WebSource.qml", "ImdbSource.qml", "LinkdingSource.qml"]) {
+    "WindowSource.qml", "WebSource.qml", "ImdbSource.qml", "LinkdingSource.qml", "ServiceSource.qml", "BrowserSource.qml"]) {
     const src = await readFile(join(root, file), "utf8")
     assert.ok(src.includes("Util.execArgv("), `${file} should use Util.execArgv`)
     assert.equal(src.includes("Util.execDetached("), false, `${file} should not use Util.execDetached`)
@@ -203,7 +203,8 @@ test("sources built from user text run argv, never a shell string", async () => 
 })
 
 test("prefix sources claim their queries; leading sources lead", async () => {
-  for (const file of ["TimeSource.qml", "ValueSource.qml", "CommandSource.qml", "KillSource.qml", "ClipboardSource.qml", "ImdbSource.qml", "LinkdingSource.qml"]) {
+  for (const file of ["HistorySource.qml", "TimeSource.qml", "ValueSource.qml", "CommandSource.qml", "KillSource.qml", "ClipboardSource.qml",
+    "ImdbSource.qml", "LinkdingSource.qml", "ServiceSource.qml", "BrowserSource.qml"]) {
     assert.ok((await readFile(join(root, file), "utf8")).includes("function claims("), file)
   }
   for (const file of ["CalcSource.qml", "LocationSource.qml"]) {
@@ -212,8 +213,8 @@ test("prefix sources claim their queries; leading sources lead", async () => {
 })
 
 test("the runner registers every source and gives claimed queries to their source alone", () => {
-  assert.ok(qml.includes("property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource, imdbSource, linkdingSource]"))
-  for (const type of ["CalcSource", "TimeSource", "ValueSource", "LocationSource", "CommandSource", "KillSource", "ClipboardSource", "RecentSource", "FolderSource", "WindowSource", "WebSource", "ImdbSource", "LinkdingSource"]) {
+  assert.ok(qml.includes("property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource, historySource, imdbSource, linkdingSource, serviceSource, browserSource]"))
+  for (const type of ["CalcSource", "TimeSource", "ValueSource", "LocationSource", "CommandSource", "KillSource", "ClipboardSource", "RecentSource", "FolderSource", "WindowSource", "WebSource", "HistorySource", "ImdbSource", "LinkdingSource", "ServiceSource", "BrowserSource"]) {
     assert.match(qml, new RegExp(type + "\\s*\\{"))
   }
   assert.match(qml, /function sourceClaims\(source, query\)/)

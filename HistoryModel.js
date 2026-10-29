@@ -8,28 +8,32 @@
 
 function RECORDED_SOURCES() { return ["files", "folders", "recent"] }
 function PINNABLE_SOURCES() { return ["files", "folders", "recent", "locations"] }
+// Never put secrets or ephemeral/sensitive results in the global history.
+function EXCLUDED_SOURCES() { return ["clipboard", "command", "kill", "values", "history"] }
 
 function isOwnPage(itemId) {
   var id = String(itemId || "")
   return id === "sources" || id.indexOf("sources.") === 0 || id.indexOf("omarunner-settings") === 0
 }
 
-// Rows that count as a launch.
+// Rows that count as a launch. The global history keeps every result that can
+// be reopened, except secrets and one-off/sensitive sources.
 function recordable(row) {
   if (!row) return false
   if (row.kind === "app") return !!row.appId
-  if (row.kind === "source") return RECORDED_SOURCES().indexOf(row.sourceId) >= 0 && !!row.value
+  if (row.kind === "source") return EXCLUDED_SOURCES().indexOf(row.sourceId) < 0 && !!row.value
   if (row.kind === "action") return !!row.action && !isOwnPage(row.itemId)
   return false
 }
 
-// Rows that can be pinned: everything recordable, plus opened locations and
+// Rows that can be pinned: files, folders, recent files, opened locations and
 // submenus (a pinned "Style" menu opens that menu).
 function pinnable(row) {
-  if (recordable(row)) return true
   if (!row) return false
+  if (row.kind === "app") return !!row.appId
   if (row.kind === "source") return PINNABLE_SOURCES().indexOf(row.sourceId) >= 0 && !!row.value
   if (row.kind === "menu" || row.kind === "link") return !isOwnPage(row.itemId)
+  if (row.kind === "action") return !!row.action && !isOwnPage(row.itemId)
   return false
 }
 
@@ -182,6 +186,31 @@ function rowFromEntry(entry, section) {
   }
 }
 
+// "!!" opens the global history; "!! query" filters labels, details and values.
+function parseQuery(query) {
+  var m = /^!!(?:\s+([\s\S]*))?$/.exec(str(query).trim())
+  return m ? { term: str(m[1]).trim() } : null
+}
+
+function claims(query) { return parseQuery(query) !== null }
+
+function search(history, query, limit) {
+  var parsed = parseQuery(query)
+  if (!parsed) return []
+  var terms = parsed.term.toLowerCase().split(/\s+/).filter(function(t) { return t.length > 0 })
+  var out = []
+  var max = typeof limit === "number" && limit > 0 ? limit : 50
+  var list = clean(history, 1000)
+  for (var i = 0; i < list.length && out.length < max; i++) {
+    var entry = list[i]
+    var text = (str(entry.label) + " " + str(entry.detail) + " " + str(entry.value)).toLowerCase()
+    var match = true
+    for (var t = 0; t < terms.length; t++) if (text.indexOf(terms[t]) < 0) { match = false; break }
+    if (match) out.push(rowFromEntry(entry, ""))
+  }
+  return out
+}
+
 // The groups shown on an empty root: Favorites first (all of them), then the
 // most recent launches that are not already favorites (`recents` of them; 0
 // turns the history off). `favoritesShown` caps the favorites listed (0 hides
@@ -210,5 +239,6 @@ if (typeof module !== "undefined") {
   module.exports = { recordable: recordable, pinnable: pinnable, keyFor: keyFor, entryFromRow: entryFromRow,
     clean: clean, record: record, isFavorite: isFavorite, toggleFavorite: toggleFavorite, removeFavorite: removeFavorite,
     moveFavorite: moveFavorite, sameKeys: sameKeys, entryPath: entryPath, entryPaths: entryPaths, missingCheck: missingCheck,
-    unavailableKeys: unavailableKeys, rowFromEntry: rowFromEntry, startGroups: startGroups }
+    unavailableKeys: unavailableKeys, rowFromEntry: rowFromEntry, startGroups: startGroups,
+    parseQuery: parseQuery, claims: claims, search: search }
 }

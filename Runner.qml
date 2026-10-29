@@ -141,7 +141,7 @@ Item {
   property int categoryWidth: root.showCategories ? Style.space(120) : 0
   property bool searchDivider: false
   property int layoutSerial: 0
-  property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource, imdbSource, linkdingSource]
+  property var sources: [calcSource, timeSource, valueSource, locationSource, commandSource, killSource, clipboardSource, windowSource, folderSource, fileSource, recentSource, webSource, historySource, imdbSource, linkdingSource, serviceSource, browserSource]
   property var sourceRows: ({})
   property int searchSerial: 0
   property var sectionLabels: ({})
@@ -1027,6 +1027,12 @@ Item {
     onResults: function(serial, rows) { root.acceptSourceRows(webSource.sourceId, serial, rows) }
   }
 
+  HistorySource {
+    id: historySource
+    history: historyStore.history
+    onResults: function(serial, rows) { root.acceptSourceRows(historySource.sourceId, serial, rows) }
+  }
+
   ImdbSource {
     id: imdbSource
     onResults: function(serial, rows) { root.acceptSourceRows(imdbSource.sourceId, serial, rows) }
@@ -1038,6 +1044,16 @@ Item {
     settingsUrl: root.settings.linkdingUrl || ""
     settingsApiKey: root.settings.linkdingApiKey || ""
     onResults: function(serial, rows) { root.acceptSourceRows(linkdingSource.sourceId, serial, rows) }
+  }
+
+  ServiceSource {
+    id: serviceSource
+    onResults: function(serial, rows) { root.acceptSourceRows(serviceSource.sourceId, serial, rows) }
+  }
+
+  BrowserSource {
+    id: browserSource
+    onResults: function(serial, rows) { root.acceptSourceRows(browserSource.sourceId, serial, rows) }
   }
 
   FileView {
