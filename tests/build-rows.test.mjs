@@ -107,6 +107,20 @@ test("source groups append after menu rows with named sections", () => {
   assert.deepEqual(r.sectionLabels, { "group:menu": "Omarchy", "source:files": "Files" })
 })
 
+test("source rows can sub-group into titled sections", () => {
+  const { items, itemOrder } = fixture()
+  const film = sourceRow("Film", "imdb")
+  film.groupKey = "titles"
+  film.groupLabel = "Movies & Series"
+  const person = sourceRow("Person", "imdb")
+  person.groupKey = "people"
+  person.groupLabel = "People"
+  const r = RunnerModel.buildRows(items, itemOrder, {}, {}, "root", "zzz",
+    [{ sourceId: "imdb", groupLabel: "IMDb", maxRows: 10, exclusive: true, rows: [film, person] }])
+  assert.deepEqual(r.rows.map(x => x.section), ["source:imdb:titles", "source:imdb:people"])
+  assert.deepEqual(r.sectionLabels, { "source:imdb:titles": "Movies & Series", "source:imdb:people": "People" })
+})
+
 test("source groups are capped at maxRows", () => {
   const { items, itemOrder } = fixture()
   const rows = ["a", "b", "c", "d"].map(l => sourceRow(l, "files"))

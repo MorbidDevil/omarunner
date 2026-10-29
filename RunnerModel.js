@@ -715,13 +715,15 @@ function buildRows(items, itemOrder, whenResults, checkedResults, activeMenu, qu
   var groups = Array.isArray(sourceGroups) ? sourceGroups : []
   var appendSource = function(group) {
     if (!group || !Array.isArray(group.rows) || group.rows.length === 0) return
-    var section = "source:" + group.sourceId
     var cap = group.maxRows > 0 ? group.maxRows : group.rows.length
     for (var s = 0; s < group.rows.length && s < cap; s++) {
-      group.rows[s].section = section
-      rows.push(group.rows[s])
+      var row = group.rows[s]
+      var sub = row.groupKey ? String(row.groupKey) : ""
+      var section = sub ? "source:" + group.sourceId + ":" + sub : "source:" + group.sourceId
+      row.section = section
+      labels[section] = row.groupLabel || group.groupLabel
+      rows.push(row)
     }
-    labels[section] = group.groupLabel
   }
 
   // A source that claimed the query by its prefix ("kill ", "cb ", ">") owns

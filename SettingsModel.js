@@ -32,7 +32,9 @@ function CHOICES() {
     { key: "radius", label: "Corner radius", choices: [
       { value: -1, label: "Theme" }, { value: 0, label: "Square" }, { value: 6, label: "Slight" }, { value: 12, label: "Round" }] },
     { key: "border", label: "Border", choices: [
-      { value: 0, label: "None" }, { value: 1, label: "1px" }, { value: 2, label: "2px" }, { value: 3, label: "3px" }] }
+      { value: 0, label: "None" }, { value: 1, label: "1px" }, { value: 2, label: "2px" }, { value: 3, label: "3px" }] },
+    { key: "linkdingUrl", label: "Linkding URL", choices: [] },
+    { key: "linkdingApiKey", label: "Linkding API key", choices: [] }
   ]
 }
 
@@ -64,7 +66,7 @@ function TOGGLES() {
 }
 
 function defaults() {
-  return { width: 420, rows: 9, density: 28, fontScale: 85, hintScale: 100, fontFamily: "", border: 2, opacity: 100, radius: -1, accent: "theme", location: "center", recents: 5, recentsOn: false, favoritesShown: 30, favoritesOn: true, fuzzy: true, categories: true, hints: true, about: true }
+  return { width: 420, rows: 9, density: 28, fontScale: 85, hintScale: 100, fontFamily: "", border: 2, opacity: 100, radius: -1, accent: "theme", location: "center", recents: 5, recentsOn: false, favoritesShown: 30, favoritesOn: true, fuzzy: true, categories: true, hints: true, about: true, linkdingUrl: "", linkdingApiKey: "" }
 }
 
 function choiceFor(key) {
@@ -87,6 +89,11 @@ function resolve(config) {
   for (var i = 0; i < list.length; i++) {
     var key = list[i].key
     if (!(key in given)) continue
+    if (key === "linkdingUrl" || key === "linkdingApiKey") {
+      var text = typeof given[key] === "string" ? given[key].trim() : ""
+      out[key] = text.length <= 512 ? text : ""
+      continue
+    }
     if (key === "fontFamily") {
       // Trimmed; blank or over-long names fall back to the theme default.
       var family = typeof given[key] === "string" ? given[key].trim() : ""
@@ -128,6 +135,8 @@ function isPreset(key, value) {
 function isHexColour(value) { return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) }
 
 function currentLabel(key, value) {
+  if (key === "linkdingUrl") return value ? String(value) : "Not set"
+  if (key === "linkdingApiKey") return value ? "Configured" : "Not set"
   var choice = choiceFor(key)
   if (!choice) return String(value)
   for (var i = 0; i < choice.choices.length; i++) if (choice.choices[i].value === value) return choice.choices[i].label
@@ -140,6 +149,8 @@ function customChoice(key, text) {
   var raw = String(text || "").trim()
   if (key === "fontFamily") return raw && raw.length <= 64 ? { value: raw, label: raw } : null
   if (key === "accent") return isHexColour(raw) ? { value: raw, label: raw } : null
+  if (key === "linkdingUrl") return raw && raw.length <= 512 ? { value: raw, label: raw } : null
+  if (key === "linkdingApiKey") return raw && raw.length <= 512 ? { value: raw, label: "Configured" } : null
   if (!RANGES()[key]) return null
   var match = /^(\d+)\s*(%|px)?$/i.exec(raw)
   if (!match) return null
@@ -181,11 +192,16 @@ function customDisplayRow(activeMenu, text) {
 }
 
 // Choices that allow a typed value: numbers in a range, a font name, a colour.
-function hasCustom(key) { return key === "fontFamily" || key === "accent" || !!RANGES()[key] }
+function hasCustom(key) {
+  return key === "fontFamily" || key === "accent" || key === "linkdingUrl" ||
+    key === "linkdingApiKey" || !!RANGES()[key]
+}
 
 function customHint(key) {
   if (key === "fontFamily") return "Type a font name"
   if (key === "accent") return "Type a hex colour, like #ff8800"
+  if (key === "linkdingUrl") return "Type the Linkding base URL"
+  if (key === "linkdingApiKey") return "Type the Linkding API token"
   var range = RANGES()[key]
   return "Type a number, " + range[0] + "–" + range[1]
 }
@@ -193,7 +209,7 @@ function customHint(key) {
 // "12" -> 12 for numeric keys; option rows carry their value as a string role.
 function parseValue(key, text) {
   var choice = choiceFor(key)
-  if (!choice) return text
+  if (!choice || !Array.isArray(choice.choices) || choice.choices.length === 0) return String(text)
   return typeof choice.choices[0].value === "number" ? Number(text) : String(text)
 }
 
@@ -237,7 +253,7 @@ function pageRows(settingsIn, setupCommand, favorites) {
     if (hasCustom(key)) group.push({ id: customId, parent: menuId, kind: "setting-custom", icon: "", iconFont: "", label: "Custom…", title: "",
       target: "", description: customHint(key), action: "", provider: "", aliases: [], when: "", checked: "config",
       value: key, order: 0 })
-    if (hasCustom(key)) checked[customId] = !isPreset(key, settings[key])
+    if (hasCustom(key)) checked[customId] = !isPreset(key, settings[key]) && String(settings[key] || "").length > 0
     return group
   }
 

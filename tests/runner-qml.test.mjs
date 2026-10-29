@@ -219,6 +219,8 @@ test("the runner registers every source and gives claimed queries to their sourc
   assert.match(qml, /function sourceClaims\(source, query\)/)
   assert.ok(qml.includes("leading: s.leading === true, exclusive: claimsNow"))
   assert.ok(qml.includes("rows: prefixOnly && !claimsNow ? [] : (root.sourceRows[s.sourceId] || [])"))
+  assert.ok(qml.includes("settingsUrl: root.settings.linkdingUrl"))
+  assert.ok(qml.includes("settingsApiKey: root.settings.linkdingApiKey"))
   assert.ok(qml.includes("RunnerModel.withSessionAliases(mergedMenu.items)"))
   assert.ok(qml.includes('{ sourceId: "session", groupLabel: "Session", hint: "lock · sleep · restart · power off" }'))
 })

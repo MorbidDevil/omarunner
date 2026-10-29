@@ -15,8 +15,10 @@ Item {
   property int maxRows: 20
   property bool enabled: true
   property var linkdingConfig: ({})
-  readonly property string instance: String(root.linkdingConfig && root.linkdingConfig.url || "")
-  readonly property string apiKey: String(root.linkdingConfig && root.linkdingConfig.apiKey || "")
+  property string settingsUrl: ""
+  property string settingsApiKey: ""
+  readonly property string instance: root.settingsUrl || String(root.linkdingConfig && root.linkdingConfig.url || "")
+  readonly property string apiKey: root.settingsApiKey || String(root.linkdingConfig && root.linkdingConfig.apiKey || "")
   signal results(int serial, var rows)
 
   function claims(query) { return LinkdingModel.claims(query) }

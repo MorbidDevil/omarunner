@@ -227,7 +227,7 @@ Folders, Files and Recent. A search that matches nothing offers a web search.
 | Kill | `kill firefox` | `kill` (SIGTERM) | `kill -KILL` |
 | Clipboard | `cb`, `cb git`, `cb scr` (images), `cb list` | paste into the previous window | copy only |
 | Web | `dd query`, `gg query`, `yt query`, `wiki query` | open in the browser | copy the URL |
-| IMDb | `imdb inception`, `imdb titles dune` | open the IMDb page | copy the URL |
+| IMDb | `imdb inception` | open the IMDb page | copy the URL |
 | Linkding | `ld rust`, `linkding #tag` | open the bookmark | copy the URL |
 
 Prefixes (`cb`, `>`, `kill`, `recent`, `t`, `uuid`, `imdb`, `ld`, `dd`/`gg`/`yt`/`wiki`
@@ -236,7 +236,12 @@ appears only behind `cb`, so copied secrets never show in an ordinary search.
 
 ### Linkding configuration
 
-Add the instance URL and an API token to `~/.config/omarchy/omarunner.json`:
+Open omarunner's Settings with `Ctrl+S`, then choose **Linkding URL** and
+**Linkding API key**, pick **Custom…**, and type the values. The API key is shown
+as “Configured” rather than in clear text.
+
+Alternatively, add the instance URL and token to
+`~/.config/omarchy/omarunner.json`:
 
 ```json
 {

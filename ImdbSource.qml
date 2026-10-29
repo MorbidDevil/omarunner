@@ -10,8 +10,8 @@ Item {
   id: root
   property string sourceId: "imdb"
   property string groupLabel: "IMDb"
-  property string hint: "imdb query · imdb titles query"
-  property int maxRows: 10
+  property string hint: "imdb query · movies/series, then people"
+  property int maxRows: 14
   property bool enabled: true
   signal results(int serial, var rows)
 
@@ -20,7 +20,7 @@ Item {
   function search(query, serial) {
     var parsed = ImdbModel.parse(query)
     if (!parsed) { root.results(serial, []); return }
-    fetcher.run(ImdbModel.curlArgs(ImdbModel.apiUrl(parsed.term, parsed.titlesOnly)), serial, query)
+    fetcher.run(ImdbModel.curlArgs(ImdbModel.apiUrl(parsed.term)), serial, query)
   }
 
   function cancel() { fetcher.cancel() }

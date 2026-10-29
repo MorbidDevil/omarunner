@@ -12,36 +12,42 @@ const RESPONSE = JSON.stringify({
   ]
 })
 
-test("imdb claims only the prefix with a query", () => {
+test("imdb claims only the imdb prefix with a query", () => {
   assert.equal(I.claims("imdb inception"), true)
   assert.equal(I.claims("imdb: inception"), true)
-  assert.equal(I.claims("imdb titles inception"), true)
   assert.equal(I.claims("imdb"), false)
   assert.equal(I.claims("imdbx inception"), false)
 })
 
-test("imdb parses the optional titles-only form", () => {
-  assert.deepEqual(I.parse("imdb inception"), { term: "inception", titlesOnly: false })
-  assert.deepEqual(I.parse("imdb: inception"), { term: "inception", titlesOnly: false })
-  assert.deepEqual(I.parse("imdb titles inception"), { term: "inception", titlesOnly: true })
-  assert.deepEqual(I.parse("imdb title inception"), { term: "inception", titlesOnly: true })
+test("imdb parses the query after the prefix", () => {
+  assert.deepEqual(I.parse("imdb inception"), { term: "inception" })
+  assert.deepEqual(I.parse("imdb: inception"), { term: "inception" })
+  assert.deepEqual(I.parse("imdb titles inception"), { term: "titles inception" })
 })
 
-test("imdb builds the suggestion URL for all entries or titles only", () => {
-  assert.equal(I.apiUrl("tom hanks", false),
+test("imdb builds the suggestion URL", () => {
+  assert.equal(I.apiUrl("tom hanks"),
     "https://v3.sg.media-imdb.com/suggestion/x/tom%20hanks.json?includeVideos=0")
-  assert.equal(I.apiUrl("inception", true),
-    "https://v3.sg.media-imdb.com/suggestion/titles/x/inception.json?includeVideos=0")
 })
 
-test("imdb filters to tt/nm ids and formats titles and names", () => {
+test("imdb filters to tt/nm ids and puts titles before people", () => {
   const rows = I.rowsFor("imdb inception", 0, RESPONSE)
-  assert.deepEqual(rows.map(r => r.label), ["Inception (2010)", "Tom Hanks", "No Year"])
+  assert.deepEqual(rows.map(r => r.label), ["Inception (2010)", "No Year", "Tom Hanks"])
+  assert.deepEqual(rows.map(r => r.groupKey), ["titles", "titles", "people"])
+  assert.deepEqual(rows.map(r => r.groupLabel), ["Movies & Series", "Movies & Series", "People"])
   assert.equal(rows[0].value, "https://www.imdb.com/title/tt1375666/")
   assert.equal(rows[0].detail, "Leonardo DiCaprio, Joseph Gordon-Levitt")
-  assert.equal(rows[1].value, "https://www.imdb.com/name/nm0000158/")
-  assert.equal(rows[1].detail, "Producer, Cast Away (2000)")
-  assert.equal(rows[2].value, "https://www.imdb.com/title/tt9999999/")
+  assert.equal(rows[2].value, "https://www.imdb.com/name/nm0000158/")
+  assert.equal(rows[2].detail, "Producer, Cast Away (2000)")
+})
+
+test("imdb reorders an actor-first API response into titles then people", () => {
+  const actorFirst = JSON.stringify({ d: [
+    { id: "nm0000158", l: "Tom Hanks", s: "Actor" },
+    { id: "tt1375666", l: "Inception", qid: "movie", tl: "2010" }
+  ] })
+  const rows = I.rowsFor("imdb tom hanks", 0, actorFirst)
+  assert.deepEqual(rows.map(r => r.label), ["Inception (2010)", "Tom Hanks"])
 })
 
 test("imdb reports empty and failed responses as visible rows", () => {

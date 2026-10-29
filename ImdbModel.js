@@ -1,6 +1,6 @@
 // IMDb suggestion API, mirroring PowerToys-Run-ImdbSearch: filter to title
 // (tt…) and name (nm…) ids, show the title with its year/type, and open the
-// matching IMDb page. "imdb titles …" searches titles only.
+// matching IMDb page. Results are grouped: movies/series first, people second.
 
 function trim(value) { return String(value || "").trim() }
 
@@ -9,23 +9,15 @@ function parse(query) {
   var m = /^imdb(?:\s+|:)\s*([\s\S]+)$/i.exec(q)
   if (!m) return null
   var term = trim(m[1])
-  var titlesOnly = false
-  var t = /^(?:t|title|titles)\s+([\s\S]+)$/i.exec(term)
-  if (t) {
-    titlesOnly = true
-    term = trim(t[1])
-  }
   if (!term) return null
-  return { term: term, titlesOnly: titlesOnly }
+  return { term: term }
 }
 
 function claims(query) { return parse(query) !== null }
 
-function apiUrl(term, titlesOnly) {
-  var base = titlesOnly
-    ? "https://v3.sg.media-imdb.com/suggestion/titles/x/"
-    : "https://v3.sg.media-imdb.com/suggestion/x/"
-  return base + encodeURIComponent(String(term || "")) + ".json?includeVideos=0"
+function apiUrl(term) {
+  return "https://v3.sg.media-imdb.com/suggestion/x/" +
+    encodeURIComponent(String(term || "")) + ".json?includeVideos=0"
 }
 
 function curlArgs(url) {
@@ -55,13 +47,17 @@ function rowsFor(query, exitCode, output) {
   var list = data && data.d
   if (!list || typeof list.length !== "number") return [errorRow("IMDb returned an unexpected response")]
 
-  var rows = []
-  for (var i = 0; i < list.length && rows.length < 10; i++) {
+  var titles = []
+  var people = []
+  for (var i = 0; i < list.length; i++) {
     var entry = list[i] || {}
     var id = String(entry.id || "")
     if (id.indexOf("tt") !== 0 && id.indexOf("nm") !== 0) continue
 
     var isActor = id.indexOf("nm") === 0
+    if (isActor && people.length >= 6) continue
+    if (!isActor && titles.length >= 8) continue
+
     var title = String(entry.l || id)
     var years = String(entry.tl || entry.yr || entry.y || "")
     var label = isActor ? title : (years ? title + " (" + years + ")" : title)
@@ -69,9 +65,14 @@ function rowsFor(query, exitCode, output) {
     var url = isActor
       ? "https://www.imdb.com/name/" + id + "/"
       : "https://www.imdb.com/title/" + id + "/"
-    rows.push(row(label, detail, url, isActor ? "user-identity" : "video-x-generic"))
+    var result = row(label, detail, url, isActor ? "user-identity" : "video-x-generic")
+    result.groupKey = isActor ? "people" : "titles"
+    result.groupLabel = isActor ? "People" : "Movies & Series"
+    if (isActor) people.push(result)
+    else titles.push(result)
   }
 
+  var rows = titles.concat(people)
   return rows.length > 0 ? rows : [noteRow()]
 }
 

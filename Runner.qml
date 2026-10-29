@@ -1035,6 +1035,8 @@ Item {
   LinkdingSource {
     id: linkdingSource
     linkdingConfig: sourceConfig.config.linkding || ({})
+    settingsUrl: root.settings.linkdingUrl || ""
+    settingsApiKey: root.settings.linkdingApiKey || ""
     onResults: function(serial, rows) { root.acceptSourceRows(linkdingSource.sourceId, serial, rows) }
   }
 

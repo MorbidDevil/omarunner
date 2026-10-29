@@ -6,7 +6,27 @@ const S = await loadJsModule("SettingsModel.js")
 test("defaults match the tuned launcher", () => {
   assert.deepEqual(S.resolve({}), { width: 420, rows: 9, density: 28, fontScale: 85, hintScale: 100, fontFamily: "", border: 2,
     opacity: 100, radius: -1, accent: "theme", location: "center", recents: 5, recentsOn: false, favoritesShown: 30, favoritesOn: true,
-    fuzzy: true, categories: true, hints: true, about: true })
+    fuzzy: true, categories: true, hints: true, about: true, linkdingUrl: "", linkdingApiKey: "" })
+})
+
+test("Linkding URL and token are editable text settings", () => {
+  const r = S.resolve({ settings: { linkdingUrl: " https://ld.example ", linkdingApiKey: " secret " } })
+  assert.equal(r.linkdingUrl, "https://ld.example")
+  assert.equal(r.linkdingApiKey, "secret")
+  assert.equal(S.currentLabel("linkdingUrl", ""), "Not set")
+  assert.equal(S.currentLabel("linkdingUrl", "https://ld.example"), "https://ld.example")
+  assert.equal(S.currentLabel("linkdingApiKey", "secret"), "Configured")
+  assert.deepEqual(S.customChoice("linkdingUrl", "ld.example"), { value: "ld.example", label: "ld.example" })
+  assert.deepEqual(S.customChoice("linkdingApiKey", " secret "), { value: "secret", label: "Configured" })
+  assert.equal(S.customChoice("linkdingApiKey", "   "), null)
+  assert.equal(S.applyOption({}, "linkdingUrl=https://ld.example").settings.linkdingUrl, "https://ld.example")
+  assert.equal(S.applyOption({}, "linkdingApiKey=secret").settings.linkdingApiKey, "secret")
+  const page = S.pageRows(S.resolve({ settings: { linkdingUrl: "https://ld.example", linkdingApiKey: "secret" } }))
+  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingUrl").label, "Linkding URL · https://ld.example")
+  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingApiKey").label, "Linkding API key · Configured")
+  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingUrl.custom").description, "Type the Linkding base URL")
+  assert.equal(page.rows.find(r => r.id === "omarunner-settings.linkdingApiKey.custom").description, "Type the Linkding API token")
+  assert.equal(page.checked["omarunner-settings.linkdingApiKey.custom"], true)
 })
 
 test("resolve keeps valid presets and rejects the rest", () => {
